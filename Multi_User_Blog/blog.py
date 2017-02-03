@@ -102,7 +102,7 @@ class LogoutPage(Handler):
         self.redirect('/')
 
 #Lets user submit a post if they are logged in
-class NewPostPage(BlogHandler):
+class NewPostPage(Handler):
     def get(self):
         if self.user:
             self.render("newpost.html")

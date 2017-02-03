@@ -1,4 +1,4 @@
-#Controls main functionality of blog
+#Controls main functionality of blog
 
 import os
 import webapp2
@@ -243,7 +243,7 @@ class User(db.Model):
         pw_hash = make_pw_hash(name, pw)
         return cls(parent = users_key(),
                     name = name,
-                    pw_hash = pw_hash,
+                    pw_hash = pw_hash,
                     email = email)
 
     #Looks up a user by name, and if the user is valid returns the user

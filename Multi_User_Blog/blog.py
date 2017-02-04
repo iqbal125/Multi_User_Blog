@@ -285,9 +285,9 @@ def valid_email(email):
 
 """ Handles URI Routing """
 
-app = webapp2.WSGIApplication([('/blog/?', HomePage),
-                               ('/blog/([0-9]+)', PostPage),
-                               ('/blog/newpost', NewPostPage),
+app = webapp2.WSGIApplication([('/', HomePage),
+                               ('/([0-9]+)', PostPage),
+                               ('/newpost', NewPostPage),
                                ('/signup', Register),
                                ('/login', LoginPage),
                                ('/logout', LogoutPage)

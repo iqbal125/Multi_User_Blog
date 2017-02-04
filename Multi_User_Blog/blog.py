@@ -90,7 +90,7 @@ class LoginPage(Handler):
         u = User.login(username, password)
         if u:
             self.login(u)
-            self.redirect('/blog')
+            self.redirect('/')
         else:
             msg = 'Invalid login'
             self.render('login.html', error = msg)
@@ -111,7 +111,7 @@ class NewPostPage(Handler):
 
     def post(self):
         if not self.user:
-            self.redirect('/blog')
+            self.redirect('/')
 
         subject = self.request.get('subject')
         content = self.request.get('content')
@@ -119,7 +119,7 @@ class NewPostPage(Handler):
         if subject and content:
             p = Post(parent = blog_key(), subject = subject, content = content)
             p.put()
-            self.redirect('/blog/%s' % str(p.key().id()))
+            self.redirect('/%s' % str(p.key().id()))
         else:
             error = "Subject and Content, please!"
             self.render("newpost.html", subject=subject, content=content, error=error)
@@ -188,7 +188,7 @@ class Register(SignupPage):
             u.put()
 
             self.login(u)
-            self.redirect('/blog')
+            self.redirect('/')
 
 
 """ Makes password hashes """

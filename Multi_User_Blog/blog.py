@@ -70,6 +70,11 @@ class Handler(webapp2.RequestHandler):
         uid = self.read_secure_cookie('user_id')
         self.user = uid and User.by_id(int(uid))
 
+#Renders posts
+def render_post(response, post):
+    response.out.write('<b>' + post.subject + '</b><br>')
+    response.out.write(post.content)
+
 
 """ Classes to Handle the Requests """
 
@@ -168,7 +173,7 @@ class SignupPage(Handler):
             have_error = True
 
         if have_error:
-            self.render('signup-form.html', **params)
+            self.render('sign-up.html', **params)
         else:
             self.done()
 
@@ -210,11 +215,11 @@ def valid_pw(name, password, h):
     return h == make_pw_hash(name, password, salt)
 
 #Creates a users Key Object
-def users_key(name):
+def users_key(name = "default"):
     return db.Key.from_path('users', name)
 
 #Creates a blog Key Object
-def blog_key(group):
+def blog_key(group="default"):
     return db.Key.from_path('blogs', group)
 
 

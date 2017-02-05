@@ -1,0 +1,14 @@
+.login-area {
+  text-align: right;
+  padding: 15px;
+  height: 50px;
+}
+
+.login-text {
+  color: #ff0000;
+}
+
+hr {
+  background-color: blue;
+  height: 5px;
+}

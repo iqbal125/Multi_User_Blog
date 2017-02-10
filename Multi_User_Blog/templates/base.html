@@ -12,9 +12,8 @@
 <body>
  <div class="container-fluid">
   <div class="row">
-   <div class="col-md-3">
-   </div>
-   <div class="col-md-6">
+   <div class="col-md-2"></div>
+   <div class="col-md-8">
     <div class="login-area">
      {% if user %}
          {{ user.username }} (<a class="login-text" href="/logout">Logout</a>)
@@ -24,13 +23,19 @@
        <a class="login-text" href="/signup">SignUp</a>
      {% endif %}
      </div>
+     <div class="title">The Zen Stoic</div>
+      <ul>
+       <li><a href="/">Home</a></li>
+       <li><a href="/blog">Blog</a></li>
+       <li><a href="/about">About</a></li>
+       <li><a href="/resources">Resources</a></li>
+      </ul>
      <div class="content">
      {% block content %}
      {% endblock %}
      </div>
     </div>
-   <div class="col-md-3">
-   </div>
+   <div class="col-md-2"></div>
   </div>
  </div>
 </body>

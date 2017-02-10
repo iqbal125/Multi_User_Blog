@@ -17,7 +17,7 @@ from google.appengine.ext import db
 secret = "xsw321"
 #Used for connecting templates with jinja2
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-#Creates jinja2 environment for loading templates
+#Creates jinja2 environment for oading templates
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                                autoescape = True)
 
@@ -81,8 +81,20 @@ def render_post(response, post):
 #Sorts posts on the home page by date created
 class HomePage(Handler):
     def get(self):
+        self.render("home.html")
+
+class BlogPage(Handler):
+    def get(self):
         posts = db.GqlQuery("select * from Post order by created desc limit 10")
-        self.render('home.html', posts = posts)
+        self.render('blog.html', posts = posts)
+
+class ResourcePage(Handler):
+    def get(self):
+        self.render("resources.html")
+
+class AboutPage(Handler):
+    def get(self):
+        self.render("about.html")
 
 class LoginPage(Handler):
     def get(self):
@@ -196,7 +208,7 @@ class Register(SignupPage):
             self.redirect('/')
 
 
-""" Makes password hashes """
+""" Methods to Make Password Hashes """
 
 #Generates 5 random letters for use in make_pw_hash method
 def make_salt(length = 5):
@@ -291,6 +303,9 @@ def valid_email(email):
 """ Handles URI Routing """
 
 app = webapp2.WSGIApplication([('/', HomePage),
+                               ("/blog", BlogPage),
+                               ("/resources", ResourcePage),
+                               ("/about", AboutPage),
                                ('/([0-9]+)', PostPage),
                                ('/newpost', NewPostPage),
                                ('/signup', Register),

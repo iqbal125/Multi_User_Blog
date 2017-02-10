@@ -1,14 +1,78 @@
 .login-area {
-  text-align: right;
-  padding: 15px;
+  text-align: left;
+  padding: 20px;
   height: 50px;
+  background-image: url("https://noma.org/wp-content/uploads/2015/07/zen-4-1024x293.jpg");
+  background-size: 100%;
+  background-repeat: no-repeat;
 }
 
 .login-text {
-  color: #ff0000;
+  color: grey;
 }
 
-hr {
-  background-color: blue;
-  height: 5px;
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}
+
+.title {
+  text-align: center;
+  padding: 10px;
+  border: 2px solid black;
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+button {
+  margin-bottom: 100px;
+}
+
+.button a {
+  text-decoration: none;
+  color: #000000;
+}
+
+textarea {
+  height: 30%;
+  width:  108%;
+}
+
+ol {
+  list-style: none;
+  font-family: "Courier New", Courier, monospace;
+}
+
+ul li a {
+    float: left;
+}
+
+ul li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+ol li a:link {
+  color: grey;
+  text-decoration: none;
+}
+
+ol li a:visited {
+  color: grey;
+}
+
+ol li a:hover {
+  text-decoration: none;
+}
+
+ul li a:hover {
+    background-color: #0d0d0d;
+    text-decoration: none;
 }

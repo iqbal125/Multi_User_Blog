@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <br>
+  {% for p in posts %}
+    {{ p.subject | safe }}
+    <br>
+    {{ p.content | safe }}
+    <br><br>
+  {% endfor %}
+  <button class="button"><a href="/newpost">Add Comment</a></button>
+{% endblock %}

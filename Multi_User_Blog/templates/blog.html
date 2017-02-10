@@ -5,10 +5,6 @@
   {% for p in posts %}
     {{ p.subject | safe }}
     <br>
-    <br>
-    <br>
-    <br>
-    {{ User.name }}
     {{ p.content | safe }}
     <br><br>
   {% endfor %}

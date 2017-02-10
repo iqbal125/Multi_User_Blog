@@ -5,6 +5,7 @@
   {% for p in posts %}
     {{ p.subject | safe }}
     <br>
+    {{ User.name }}
     {{ p.content | safe }}
     <br><br>
   {% endfor %}

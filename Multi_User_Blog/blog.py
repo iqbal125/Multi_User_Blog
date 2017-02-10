@@ -1,5 +1,5 @@
 #Controls main functionality of blog
-
+from time import strftime
 import os
 import webapp2
 import jinja2

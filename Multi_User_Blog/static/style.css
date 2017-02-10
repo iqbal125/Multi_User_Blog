@@ -11,6 +11,10 @@
   color: grey;
 }
 
+.login-block {
+  padding: 50px;
+  margin: 50px;
+}
 
 ul {
     list-style-type: none;

@@ -1,5 +1,6 @@
-{%extends "base.html" %}
+{% extends "base.html" %}
 
+{% block content %}
 <div class="post">
   <div class="post-heading">
     <div class="post-title">
@@ -7,7 +8,7 @@
     </div>
 
     <div class="post-date">
-      {{p.created.strftime("%b %d, %Y")}}
+      {{p.created.strftime("%b, %d, %y")}}
     </div>
   </div>
 
@@ -15,3 +16,4 @@
     {{p._render_text | safe}}
   </div>
 </div>
+{% endblock %}

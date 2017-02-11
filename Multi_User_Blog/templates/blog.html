@@ -3,10 +3,14 @@
 {% block content %}
   <br>
   {% for p in posts %}
-    {{ p.subject | safe }}
-    <br>
+    <a href="/post/{{p.key().id()}}"><h3>{{ p.subject | safe }}</h3></a>
     {{ p.content | safe }}
     <br><br>
   {% endfor %}
-  <button class="button"><a href="/newpost">Add Comment</a></button>
+  <button class="button"><a href="/newpost">Add Post</a></button>
+  <br>
+  <br>
+  <br>
+  <br>
+  <br>
 {% endblock %}

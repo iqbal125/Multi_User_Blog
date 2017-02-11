@@ -11,10 +11,6 @@
   color: grey;
 }
 
-.login-block {
-  padding: 50px;
-  margin: 50px;
-}
 
 ul {
     list-style-type: none;
@@ -32,9 +28,6 @@ ul {
   margin-bottom: 0px;
 }
 
-button {
-  margin-bottom: 100px;
-}
 
 .button a {
   text-decoration: none;

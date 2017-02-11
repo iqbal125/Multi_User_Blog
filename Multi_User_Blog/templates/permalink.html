@@ -3,9 +3,18 @@
   {% if post %}
     <h2>{{post.subject}}</h2>
     <br>
-    <span>{{ post.created }}</span>
+    <span>{{post.created}}</span>
     <hr>
     <br>
     <p>{{post.content | safe}}</p>
  {% endif %}
+ <button class="button"><a href="/newcomment">Add Comment</a></button>
+   {% if comment %}
+   <br>
+   <span>{{comment.content}}</span>
+   <br>
+   <span>Posted by: {{comment.author}}</span>
+   <br>
+   <hr>
+  {% endif %}
 {% endblock %}

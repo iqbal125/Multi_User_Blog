@@ -1,68 +1,79 @@
 <!DOCTYPE html>
-
 <html>
   <head>
     <title>Sign Up</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   </head>
-
   <body>
-    <h2>Signup</h2>
-    <form method="post">
-      <table>
-        <tr>
-          <td class="label">
-            Username
-          </td>
-          <td>
-            <input type="text" name="username" value="{{username}}">
-          </td>
-          <td class="error">
-            {{error_username}}
-          </td>
-        </tr>
-
-        <tr>
-          <td class="label">
-            Password
-          </td>
-          <td>
-            <input type="password" name="password" value="">
-          </td>
-          <td class="error">
-            {{error_password}}
-          </td>
-        </tr>
-
-        <tr>
-          <td class="label">
-            Verify Password
-          </td>
-          <td>
-            <input type="password" name="verify" value="">
-          </td>
-          <td class="error">
-            {{error_verify}}
-          </td>
-        </tr>
-
-        <tr>
-          <td class="label">
-            Email (optional)
-          </td>
-          <td>
-            <input type="text" name="email" value="{{email}}">
-          </td>
-          <td class="error">
-            {{error_email}}
-          </td>
-        </tr>
-      </table>
-      <input type="submit">
-    </form>
-    <div>
-      <p>
-        <a href="/login">Already a Member? Login</a>
-      </p>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-lg-1"></div>
+        <div class="col-lg-2">
+          <br>
+          <h2>Signup</h2>
+          <form method="post">
+            <table>
+              <tr>
+                <td>
+                  <span style="margin-right:50"><strong>Username</strong></span>
+                </td>
+                <td>
+                  <input type="text" name="username" value="{{username}}">
+                </td>
+                <td class="error">
+                  {{error_username}}
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <span style="margin-right:50px;"><strong>Password</strong></span>
+                </td>
+                <td>
+                  <input type="password" name="password" value="">
+                </td>
+                <td class="error">
+                  {{error_password}}
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <span style="margin-right:50px;"><strong>Verify_Password</strong></span>
+                </td>
+                <td>
+                  <input type="password" name="verify" value="">
+                </td>
+                <td class="error">
+                  {{error_verify}}
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <span style="margin-right:50px;"><strong>Email_(optional)</strong></span>
+                </td>
+                <td>
+                  <input type="text" name="email" value="{{email}}">
+                </td>
+                <td class="error">
+                  {{error_email}}
+                </td>
+              </tr>
+            </table>
+            <div style="margin-top:10px;">
+              <input type="submit">
+            </div>
+          </form>
+          <div style="margin-top:15px;">
+            <a href="/login">Already a Member? Login</a>
+          </div>
+        </div>
+        <div class="col-lg-1"></div>
+        <div class="col-lg-8">
+          <div>
+            <a href="/"><img class="img-responsive" src="https://noma.org/wp-content/uploads/2015/07/zen-4-1024x293.jpg" style="margin-top:10px;"></a>
+          </div>
+        </div>
+      </div>
     </div>
   </body>
 </html>

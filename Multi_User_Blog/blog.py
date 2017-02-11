@@ -11,7 +11,9 @@ import hmac
 from google.appengine.ext import db
 
 
-""" The Main Blog Handler Class and Methods """
+"""
+        The Main Blog Handler Class and Methods
+"""
 
 #Used to make hashes more secure
 secret = "xsw321"
@@ -70,19 +72,17 @@ class Handler(webapp2.RequestHandler):
         uid = self.read_secure_cookie('user_id')
         self.user = uid and User.by_id(int(uid))
 
-#Renders posts
-def render_post(response, post):
-    response.out.write('<b>' + post.subject + '</b><br>')
-    response.out.write(post.content)
 
-
-""" Classes to Handle the Requests """
+"""
+        Classes to Handle the Requests
+"""
 
 #Sorts posts on the home page by date created
 class HomePage(Handler):
     def get(self):
         self.render("home.html")
 
+#Renders up to 10 posts on the Blog page
 class BlogPage(Handler):
     def get(self):
         posts = db.GqlQuery("select * from Post order by created desc limit 10")
@@ -128,7 +128,7 @@ class NewPostPage(Handler):
 
     def post(self):
         if not self.user:
-            self.redirect('/')
+            self.redirect('/login')
 
         subject = self.request.get('subject')
         content = self.request.get('content')
@@ -136,7 +136,7 @@ class NewPostPage(Handler):
         if subject and content:
             p = Post(parent = blog_key(), subject = subject, content = content)
             p.put()
-            self.redirect('/%s' % str(p.key().id()))
+            self.redirect('/post/%s' % str(p.key().id()))
         else:
             error = "Subject and Content, please!"
             self.render("newpost.html", subject=subject, content=content, error=error)
@@ -153,6 +153,19 @@ class PostPage(Handler):
             return
 
         self.render("permalink.html", post = post)
+
+class CommentPage(Handler):
+    def get(self, com_id):
+        #Creates key for specific comment
+        key = db.Key.from_path('Comment', int(com_id))
+        #Gets the key for a specific comment
+        comment = db.get(key)
+
+        if not comment:
+            self.error(404)
+            return
+
+        self.render("comment.html", comment = comment)
 
 class SignupPage(Handler):
     def get(self):
@@ -208,7 +221,30 @@ class Register(SignupPage):
             self.redirect('/')
 
 
-""" Methods to Make Password Hashes """
+class AddComment(Handler):
+    def get(self):
+        if self.user:
+            self.render("newcomment.html")
+        else:
+            self.redirect("/login")
+
+    def post(self):
+        if not self.user:
+            self.redirect('/login')
+
+        content = self.request.get('content')
+        user = self.user
+        if content:
+            c = Comment(content = content, author = user.name)
+            c.put()
+            self.redirect('/post/%s' % str(c.key().id()))
+        else:
+            error = "Content, please!"
+
+
+"""
+        Methods to Make Password Hashes
+"""
 
 #Generates 5 random letters for use in make_pw_hash method
 def make_salt(length = 5):
@@ -235,7 +271,10 @@ def blog_key(group="default"):
     return db.Key.from_path('blogs', group)
 
 
-""" The User and Post Models """
+
+"""
+        The User, Post and Comment Models
+"""
 
 #User entity with name, password hash and optional email properties
 class User(db.Model):
@@ -270,20 +309,29 @@ class User(db.Model):
         if u and valid_pw(name, pw, u.pw_hash):
             return u
 
-
 #Post entity with subject, content and created date properties
 class Post(db.Model):
     subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
 
-    #Renders new posts
-    def render(self):
-        self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", p = self)
+    #Returns a post by its id
+    @classmethod
+    def by_id(cls, uid):
+        return cls.get_by_id(uid, parent = blog_key)
 
 
-""" Username and Password Validation """
+#Comment entity with content and author properties
+class Comment(db.Model):
+    content = db.StringProperty(required = True)
+    author = db.StringProperty(required = True)
+
+
+
+
+"""
+        Username and Password Validation
+"""
 
 #Basic valid username and password code, copied from Udacity Intro to Backend course
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
@@ -300,14 +348,18 @@ def valid_email(email):
 
 
 
-""" Handles URI Routing """
+"""
+        Handles URI Routing
+"""
 
 app = webapp2.WSGIApplication([('/', HomePage),
                                ("/blog", BlogPage),
                                ("/resources", ResourcePage),
                                ("/about", AboutPage),
-                               ('/([0-9]+)', PostPage),
+                               ('/post/([0-9]+)', PostPage),
                                ('/newpost', NewPostPage),
+                               ('/newcomment', AddComment),
+                               ('/post/([0-9]+)/([0-9]+)', CommentPage),
                                ('/signup', Register),
                                ('/login', LoginPage),
                                ('/logout', LogoutPage)

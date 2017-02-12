@@ -8,13 +8,12 @@
     <br>
     <p>{{post.content | safe}}</p>
  {% endif %}
- <button class="button"><a href="/newcomment">Add Comment</a></button>
-   {% if comment %}
-   <br>
-   <span>{{comment.content}}</span>
-   <br>
-   <span>Posted by: {{comment.author}}</span>
-   <br>
-   <hr>
-  {% endif %}
+ <form method="post">
+   <label>
+     <div>Add Comment</div>
+     <textarea name="content">{{content}}</textarea>
+   </label>
+   <div class="error">{{error}}</div>
+   <input type="submit">
+ </form>
 {% endblock %}

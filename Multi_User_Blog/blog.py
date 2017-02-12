@@ -154,18 +154,31 @@ class PostPage(Handler):
 
         self.render("permalink.html", post = post)
 
-class CommentPage(Handler):
-    def get(self, com_id):
-        #Creates key for specific comment
-        key = db.Key.from_path('Comment', int(com_id))
-        #Gets the key for a specific comment
-        comment = db.get(key)
+    def post(self):
+        if not self.user:
+            self.redirect('/login')
 
-        if not comment:
-            self.error(404)
-            return
+        user = self.user
+        content = self.request.get('content')
+        if content:
+            c = Comment(content = content, author = user.name)
+            c.put()
+            self.redirect('/post/%s' %  str(c.key().id()))
+        else:
+            error = "Content, please!"
 
-        self.render("comment.html", comment = comment)
+# class CommentPage(Handler):
+#     def get(self, com_id):
+#         #Creates key for specific comment
+#         key = db.Key.from_path('Comment', int(com_id), parent=post_key())
+#         #Gets the key for a specific comment
+#         comment = db.get(key)
+#
+#         if not comment:
+#             self.error(404)
+#             return
+#
+#         self.render("comment.html", comment = comment)
 
 class SignupPage(Handler):
     def get(self):
@@ -221,25 +234,26 @@ class Register(SignupPage):
             self.redirect('/')
 
 
-class AddComment(Handler):
-    def get(self):
-        if self.user:
-            self.render("newcomment.html")
-        else:
-            self.redirect("/login")
-
-    def post(self):
-        if not self.user:
-            self.redirect('/login')
-
-        content = self.request.get('content')
-        user = self.user
-        if content:
-            c = Comment(content = content, author = user.name)
-            c.put()
-            self.redirect('/post/%s' % str(c.key().id()))
-        else:
-            error = "Content, please!"
+# class AddComment(Handler):
+#     def get(self):
+#         if self.user:
+#             self.render("newcomment.html")
+#         else:
+#             self.redirect("/login")
+#
+#     def post(self):
+#         if not self.user:
+#             self.redirect('/login')
+#
+#
+#         content = self.request.get('content')
+#         user = self.user
+#         if content:
+#             c = Comment(content = content, author = user.name)
+#             c.put()
+#             self.redirect('/post/%s' %  str(p.key().id()))
+#         else:
+#             error = "Content, please!"
 
 
 """
@@ -269,6 +283,9 @@ def users_key(name = "default"):
 #Creates a blog Key Object
 def blog_key(group="default"):
     return db.Key.from_path('blogs', group)
+
+def post_key(name="default"):
+    return db.Key.from_path("posts", name)
 
 
 
@@ -358,8 +375,8 @@ app = webapp2.WSGIApplication([('/', HomePage),
                                ("/about", AboutPage),
                                ('/post/([0-9]+)', PostPage),
                                ('/newpost', NewPostPage),
-                               ('/newcomment', AddComment),
-                               ('/post/([0-9]+)/([0-9]+)', CommentPage),
+                            #    ('/newcomment', AddComment),
+                            #    ('/post/([0-9]+)/([0-9]+)', CommentPage),
                                ('/signup', Register),
                                ('/login', LoginPage),
                                ('/logout', LogoutPage)

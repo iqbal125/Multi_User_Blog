@@ -141,13 +141,17 @@ class NewPostPage(Handler):
             error = "Subject and Content, please!"
             self.render("newpost.html", subject=subject, content=content, error=error)
 
+
 class PostPage(Handler):
     def get(self, post_id):
         #Creates key for specific post
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         #Gets the key for a specific post
         post = db.get(key)
-        comments = db.GqlQuery("select * from Comment order by created desc limit 10")
+
+        comments = Comment.all()
+        # comments.order("-created")
+        comments.filter("comment_id =", str(post_id))
 
         if not post:
             self.error(404)
@@ -156,30 +160,29 @@ class PostPage(Handler):
         self.render("permalink.html", post = post, comments = comments)
 
 
-    # def post(self, post_id):
-    #     if not self.user:
-    #         self.redirect('/login')
-    #
-    #     user = self.user
-    #     content = self.request.get('content')
-    #     if content:
-    #         c = Comment(content = content, author = user.name)
-    #         c.put()
-    #     else:
-    #         error = "Content, please!"
+class DeleteComment(Handler):
+    def post(self, com_id):
+        if not self.user:
+            return self.redirect('/')
 
-class CommentPage(Handler):
-    def get(self, com_id):
-        #Creates key for specific comment
-        key = db.Key.from_path('Comment', int(com_id), parent=post_key())
-        #Gets the key for a specific comment
-        comment = db.get(key)
 
-        if not comment:
-            self.error(404)
-            return
 
-        self.render("comment.html", comment = comment)
+
+
+class AddComment(Handler):
+    def post(self):
+        if not self.user:
+            self.redirect('/login')
+
+        post_id = self.request.get("post_id")
+        content = self.request.get('content')
+        user = self.user
+        if content:
+            c = Comment(content = content, author = user.name, comment_id = post_id)
+            c.put()
+            self.redirect('/post/%s' %  post_id)
+        else:
+            error = "Content, please!"
 
 class SignupPage(Handler):
     def get(self):
@@ -233,22 +236,6 @@ class Register(SignupPage):
 
             self.login(u)
             self.redirect('/')
-
-
-class AddComment(Handler):
-    def post(self):
-        if not self.user:
-            self.redirect('/login')
-
-        post_id = self.request.get("post_id")
-        content = self.request.get('content')
-        user = self.user
-        if content:
-            c = Comment(content = content, author = user.name, comment_id = post_id)
-            c.put()
-            self.redirect('/post/%s' %  post_id)
-        else:
-            error = "Content, please!"
 
 
 """
@@ -337,13 +324,21 @@ class Post(db.Model):
 class Comment(db.Model):
     content = db.StringProperty(required = True)
     author = db.StringProperty(required = True)
-    comment_id = db.ReferenceProperty(Post)
+    comment_id = db.StringProperty()
     created = db.DateTimeProperty(auto_now_add = True)
+
+    @classmethod
+    def addComment(cls, content, author):
+        c = Comment(content = str(content),
+                   comment_text = str(text),
+                   author = str(author))
+        c.put()
+        return c.key().id()
 
 
     # @classmethod
     # def by_post(cls, post_id):
-    #     c = cls.all().filter('name =', post_id).get()
+    #     c = cls.all().filter('comment_id =', post_id).get()
     #     return c
 
 
@@ -378,10 +373,10 @@ app = webapp2.WSGIApplication([('/', HomePage),
                                ("/blog", BlogPage),
                                ("/resources", ResourcePage),
                                ("/about", AboutPage),
+                               ("deletecomment", DeleteComment),
                                ('/post/([0-9]+)', PostPage),
                                ('/newpost', NewPostPage),
                                ('/newcomment', AddComment),
-                            #    ('/post/([0-9]+)/([0-9]+)', CommentPage),
                                ('/signup', Register),
                                ('/login', LoginPage),
                                ('/logout', LogoutPage)

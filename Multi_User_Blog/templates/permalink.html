@@ -7,6 +7,20 @@
     <hr>
     <br>
     <p>{{post.content | safe}}</p>
+    <br>
+    <p><strong>Comments:</strong></p>
+    {% for c in comments %}
+      <div>
+        <p>
+            {{c.content}}
+        </p>
+        <form action="/deletecomment" method="post">
+        <input type="hidden" value="{{ c.key().id() }}" name="com_id" />
+        <input type="submit" value="Delete">
+        </form>
+      </div>
+      {% endfor %}
+    <br>
    <form method="post" action="/newcomment">
    <label>
      <div>Add Comment</div>
@@ -17,11 +31,4 @@
    <input type="submit" value="Submit">
  </form>
  {% endif %}
- {% for c in comments %}
-   <div>
-     <h3>
-         {{c.content}}
-     </h3>
-   </div>
-   {% endfor %}
 {% endblock %}

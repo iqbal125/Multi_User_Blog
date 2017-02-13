@@ -147,38 +147,39 @@ class PostPage(Handler):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         #Gets the key for a specific post
         post = db.get(key)
+        comments = db.GqlQuery("select * from Comment order by created desc limit 10")
 
         if not post:
             self.error(404)
             return
 
-        self.render("permalink.html", post = post)
+        self.render("permalink.html", post = post, comments = comments)
 
-    def post(self):
-        if not self.user:
-            self.redirect('/login')
 
-        user = self.user
-        content = self.request.get('content')
-        if content:
-            c = Comment(content = content, author = user.name)
-            c.put()
-            self.redirect('/post/%s' %  str(c.key().id()))
-        else:
-            error = "Content, please!"
+    # def post(self, post_id):
+    #     if not self.user:
+    #         self.redirect('/login')
+    #
+    #     user = self.user
+    #     content = self.request.get('content')
+    #     if content:
+    #         c = Comment(content = content, author = user.name)
+    #         c.put()
+    #     else:
+    #         error = "Content, please!"
 
-# class CommentPage(Handler):
-#     def get(self, com_id):
-#         #Creates key for specific comment
-#         key = db.Key.from_path('Comment', int(com_id), parent=post_key())
-#         #Gets the key for a specific comment
-#         comment = db.get(key)
-#
-#         if not comment:
-#             self.error(404)
-#             return
-#
-#         self.render("comment.html", comment = comment)
+class CommentPage(Handler):
+    def get(self, com_id):
+        #Creates key for specific comment
+        key = db.Key.from_path('Comment', int(com_id), parent=post_key())
+        #Gets the key for a specific comment
+        comment = db.get(key)
+
+        if not comment:
+            self.error(404)
+            return
+
+        self.render("comment.html", comment = comment)
 
 class SignupPage(Handler):
     def get(self):
@@ -234,26 +235,20 @@ class Register(SignupPage):
             self.redirect('/')
 
 
-# class AddComment(Handler):
-#     def get(self):
-#         if self.user:
-#             self.render("newcomment.html")
-#         else:
-#             self.redirect("/login")
-#
-#     def post(self):
-#         if not self.user:
-#             self.redirect('/login')
-#
-#
-#         content = self.request.get('content')
-#         user = self.user
-#         if content:
-#             c = Comment(content = content, author = user.name)
-#             c.put()
-#             self.redirect('/post/%s' %  str(p.key().id()))
-#         else:
-#             error = "Content, please!"
+class AddComment(Handler):
+    def post(self):
+        if not self.user:
+            self.redirect('/login')
+
+        post_id = self.request.get("post_id")
+        content = self.request.get('content')
+        user = self.user
+        if content:
+            c = Comment(content = content, author = user.name, comment_id = post_id)
+            c.put()
+            self.redirect('/post/%s' %  post_id)
+        else:
+            error = "Content, please!"
 
 
 """
@@ -342,6 +337,16 @@ class Post(db.Model):
 class Comment(db.Model):
     content = db.StringProperty(required = True)
     author = db.StringProperty(required = True)
+    comment_id = db.ReferenceProperty(Post)
+    created = db.DateTimeProperty(auto_now_add = True)
+
+
+    # @classmethod
+    # def by_post(cls, post_id):
+    #     c = cls.all().filter('name =', post_id).get()
+    #     return c
+
+
 
 
 
@@ -375,7 +380,7 @@ app = webapp2.WSGIApplication([('/', HomePage),
                                ("/about", AboutPage),
                                ('/post/([0-9]+)', PostPage),
                                ('/newpost', NewPostPage),
-                            #    ('/newcomment', AddComment),
+                               ('/newcomment', AddComment),
                             #    ('/post/([0-9]+)/([0-9]+)', CommentPage),
                                ('/signup', Register),
                                ('/login', LoginPage),

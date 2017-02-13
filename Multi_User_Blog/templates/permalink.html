@@ -3,17 +3,25 @@
   {% if post %}
     <h2>{{post.subject}}</h2>
     <br>
-    <span>{{post.created}}</span>
+    <span>{{post.created.strftime("%b %d, %Y %H:%M.%S")}}</span>
     <hr>
     <br>
     <p>{{post.content | safe}}</p>
- {% endif %}
- <form method="post">
+   <form method="post" action="/newcomment">
    <label>
      <div>Add Comment</div>
-     <textarea name="content">{{content}}</textarea>
+     <input type="hidden" value="{{post.key().id()}}" name="post_id" />
+     <textarea name="content"></textarea>
    </label>
-   <div class="error">{{error}}</div>
-   <input type="submit">
+   <br>
+   <input type="submit" value="Submit">
  </form>
+ {% endif %}
+ {% for c in comments %}
+   <div>
+     <h3>
+         {{c.content}}
+     </h3>
+   </div>
+   {% endfor %}
 {% endblock %}

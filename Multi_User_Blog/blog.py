@@ -85,7 +85,7 @@ class HomePage(Handler):
 #Renders up to 10 posts on the Blog page
 class BlogPage(Handler):
     def get(self):
-        posts = db.GqlQuery("select * from Post order by created desc limit 10")
+        posts = Post.all().order("-created")
         self.render('blog.html', posts = posts)
 
 class ResourcePage(Handler):
@@ -130,11 +130,33 @@ class NewPostPage(Handler):
         if not self.user:
             self.redirect('/login')
 
+        user = self.user
         subject = self.request.get('subject')
         content = self.request.get('content')
         #If there is subject and content, the Post class creates a new post and redirects to a permalink
         if subject and content:
-            p = Post(parent = blog_key(), subject = subject, content = content)
+            p = Post(parent = blog_key(), subject = subject, content = content, author = str(user.name))
+            p.put()
+            self.redirect('/post/%s' % str(p.key().id()))
+        else:
+            error = "Subject and Content, please!"
+            self.render("newpost.html", subject=subject, content=content, error=error)
+
+
+class EditPost(NewPostPage):
+    def get(self):
+        self.render("editpost.html")
+
+    def post(self):
+        if not self.user:
+            self.redirect('/login')
+
+        user = self.user
+        subject = self.request.get('subject')
+        content = self.request.get('content')
+        #If there is subject and content, the Post class creates a new post and redirects to a permalink
+        if subject and content:
+            p = Post(parent = blog_key(), subject = subject, content = content, author = str(user.name))
             p.put()
             self.redirect('/post/%s' % str(p.key().id()))
         else:
@@ -149,27 +171,78 @@ class PostPage(Handler):
         #Gets the key for a specific post
         post = db.get(key)
 
-        comments = Comment.all()
-        # comments.order("-created")
-        comments.filter("comment_id =", str(post_id))
 
+        comments = Comment.all().order("-created")
+        comments.filter("comment_id =", str(post_id))
+        
         if not post:
             self.error(404)
             return
 
         self.render("permalink.html", post = post, comments = comments)
 
+    def post(self):
+        user = self.user
+        if self.request.get("like"):
+            L = Like(like_postid = post_id, like_author = user.name, like_num = like_num + 1)
+            L.put()
+
+
+class DeletePost(Handler):
+    def get(self):
+        self.render("deletepost.html")
+
+    def post(self):
+        user = self.user
+        posts_id = self.request.get("posts_id")
+        post = Post.get_by_id(int(posts_id))
+        if self.request.get("delete"):
+            if post:
+                if post.author == user.name:
+                    post.delete()
+                    self.redirect('/blog')
+                else:
+                    self.write("You cannot delete other user's posts")
+            else:
+                self.write("This post no longer exists")
+        else:
+            self.write("error")
+
 
 class DeleteComment(Handler):
-    def post(self, com_id):
-        if not self.user:
-            return self.redirect('/')
-
-
-
+    def post(self):
+        user = self.user
+        comments_id = self.request.get("com_id")
+        comment = Comment.get_by_id(int(comments_id))
+        if comment:
+            if comment.author == user.name:
+                comment.delete()
+                self.redirect('/post/%s' %  str(comment.comment_id))
+            else:
+                 self.write("You cannot delete other user's comments")
+        else:
+             self.write("This comment no longer exists")
 
 
 class AddComment(Handler):
+    def post(self):
+        if not self.user:
+            self.redirect('/login')
+
+        post_id = self.request.get("post_id")
+        content = self.request.get('content')
+        user = self.user
+        if content:
+            c = Comment(content = content, author = user.name, comment_id = post_id)
+            c.put()
+            self.redirect('/post/%s' %  post_id)
+        else:
+            error = "Content, please!"
+
+class EditComment(AddComment):
+    def get(self):
+        self.render("editcomment.html")
+
     def post(self):
         if not self.user:
             self.redirect('/login')
@@ -313,6 +386,7 @@ class Post(db.Model):
     subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
+    author = db.StringProperty(required = True)
 
     #Returns a post by its id
     @classmethod
@@ -324,7 +398,7 @@ class Post(db.Model):
 class Comment(db.Model):
     content = db.StringProperty(required = True)
     author = db.StringProperty(required = True)
-    comment_id = db.StringProperty()
+    comment_id = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
 
     @classmethod
@@ -335,15 +409,10 @@ class Comment(db.Model):
         c.put()
         return c.key().id()
 
-
-    # @classmethod
-    # def by_post(cls, post_id):
-    #     c = cls.all().filter('comment_id =', post_id).get()
-    #     return c
-
-
-
-
+class Like(db.Model):
+    like_author = db.StringProperty(required = True)
+    like_postid = db.TextProperty(required = True)
+    like_num = db.IntegerProperty(default = 0)
 
 
 """
@@ -373,7 +442,10 @@ app = webapp2.WSGIApplication([('/', HomePage),
                                ("/blog", BlogPage),
                                ("/resources", ResourcePage),
                                ("/about", AboutPage),
-                               ("deletecomment", DeleteComment),
+                               ("/deletepost", DeletePost),
+                               ("/deletecomment", DeleteComment),
+                               ("/editpost", EditPost),
+                               ("/editcomment", EditComment),
                                ('/post/([0-9]+)', PostPage),
                                ('/newpost', NewPostPage),
                                ('/newcomment', AddComment),

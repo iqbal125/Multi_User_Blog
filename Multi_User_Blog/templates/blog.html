@@ -5,8 +5,23 @@
   {% for p in posts %}
     <a href="/post/{{p.key().id()}}"><h3>{{ p.subject | safe }}</h3></a>
     {{ p.content | safe }}
+    <div>
+    <form method="post" action="/deletepost">
+    <input type="hidden" value="{{p.key().id()}}" name="posts_id"/>
+    <input type="submit" value="Delete" name="delete">
+    </form>
+  </div>
+    <br>
+    <form method="get" action="/editpost">
+    <input type="submit" value="Edit" name="edit">
+    </form>
+    <br>
+    <p>
+      By: {{p.author}}
+    </p>
     <br><br>
   {% endfor %}
+  <h4>Add Post:</h4>
   <button class="button"><a href="/newpost">Add Post</a></button>
   <br>
   <br>

@@ -14,9 +14,15 @@
         <p>
             {{c.content}}
         </p>
-        <form action="/deletecomment" method="post">
+        <form method="post" action="/deletecomment">
         <input type="hidden" value="{{ c.key().id() }}" name="com_id" />
         <input type="submit" value="Delete">
+        </form>
+      </div>
+      <div>
+        <form method="post" action="/editcomment">
+          <input type="hidden" value="{{ c.key().id() }}" name="com_id" />
+          <input type="submit" value="Edit" name="edit">
         </form>
       </div>
       {% endfor %}
@@ -30,5 +36,11 @@
    <br>
    <input type="submit" value="Submit">
  </form>
+ <br>
+  <input type="submit" value="Like" name="like">
+
+  <br>
+  <br>
+  <br>
  {% endif %}
 {% endblock %}

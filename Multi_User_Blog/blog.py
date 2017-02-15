@@ -1,4 +1,5 @@
 #Controls main functionality of blog
+
 from time import strftime
 import os
 import webapp2
@@ -9,17 +10,17 @@ import string
 import hashlib
 import hmac
 from google.appengine.ext import db
-
+import time
 
 """
-        The Main Blog Handler Class and Methods
+        The Main Handler Class and Associated Methods
 """
 
 #Used to make hashes more secure
 secret = "xsw321"
 #Used for connecting templates with jinja2
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-#Creates jinja2 environment for oading templates
+#Creates jinja2 environment for loading templates
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                                autoescape = True)
 
@@ -38,7 +39,7 @@ def check_secure_val(secure_val):
     if secure_val == make_secure_val(val):
         return val
 
-#Basic request handling, slightly modified and copied from Udacity Intro to Backend course
+#Basic request handling, modified and copied from Udacity Intro to Backend course
 class Handler(webapp2.RequestHandler):
     #Writes to webpage
     def write(self, *a, **kw):
@@ -74,15 +75,15 @@ class Handler(webapp2.RequestHandler):
 
 
 """
+
         Classes to Handle the Requests
+
 """
 
-#Sorts posts on the home page by date created
 class HomePage(Handler):
     def get(self):
         self.render("home.html")
 
-#Renders up to 10 posts on the Blog page
 class BlogPage(Handler):
     def get(self):
         posts = Post.all().order("-created")
@@ -96,166 +97,11 @@ class AboutPage(Handler):
     def get(self):
         self.render("about.html")
 
-class LoginPage(Handler):
-    def get(self):
-        self.render("login.html")
-    #Gets username and password
-    def post(self):
-        username = self.request.get('username')
-        password = self.request.get('password')
-        #If valid username and password logs in user, otherwise prints error message
-        u = User.login(username, password)
-        if u:
-            self.login(u)
-            self.redirect('/')
-        else:
-            msg = 'Invalid login'
-            self.render('login.html', error = msg)
+"""
 
-#Calls logout method in the Handler and redirects to homepage
-class LogoutPage(Handler):
-    def get(self):
-        self.logout()
-        self.redirect('/')
+    Handles User Requests
 
-#Lets user submit a post if they are logged in
-class NewPostPage(Handler):
-    def get(self):
-        if self.user:
-            self.render("newpost.html")
-        else:
-            self.redirect("/login")
-
-    def post(self):
-        if not self.user:
-            self.redirect('/login')
-
-        user = self.user
-        subject = self.request.get('subject')
-        content = self.request.get('content')
-        #If there is subject and content, the Post class creates a new post and redirects to a permalink
-        if subject and content:
-            p = Post(parent = blog_key(), subject = subject, content = content, author = str(user.name))
-            p.put()
-            self.redirect('/post/%s' % str(p.key().id()))
-        else:
-            error = "Subject and Content, please!"
-            self.render("newpost.html", subject=subject, content=content, error=error)
-
-
-class EditPost(NewPostPage):
-    def get(self):
-        self.render("editpost.html")
-
-    def post(self):
-        if not self.user:
-            self.redirect('/login')
-
-        user = self.user
-        subject = self.request.get('subject')
-        content = self.request.get('content')
-        #If there is subject and content, the Post class creates a new post and redirects to a permalink
-        if subject and content:
-            p = Post(parent = blog_key(), subject = subject, content = content, author = str(user.name))
-            p.put()
-            self.redirect('/post/%s' % str(p.key().id()))
-        else:
-            error = "Subject and Content, please!"
-            self.render("newpost.html", subject=subject, content=content, error=error)
-
-
-class PostPage(Handler):
-    def get(self, post_id):
-        #Creates key for specific post
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        #Gets the key for a specific post
-        post = db.get(key)
-
-
-        comments = Comment.all().order("-created")
-        comments.filter("comment_id =", str(post_id))
-        
-        if not post:
-            self.error(404)
-            return
-
-        self.render("permalink.html", post = post, comments = comments)
-
-    def post(self):
-        user = self.user
-        if self.request.get("like"):
-            L = Like(like_postid = post_id, like_author = user.name, like_num = like_num + 1)
-            L.put()
-
-
-class DeletePost(Handler):
-    def get(self):
-        self.render("deletepost.html")
-
-    def post(self):
-        user = self.user
-        posts_id = self.request.get("posts_id")
-        post = Post.get_by_id(int(posts_id))
-        if self.request.get("delete"):
-            if post:
-                if post.author == user.name:
-                    post.delete()
-                    self.redirect('/blog')
-                else:
-                    self.write("You cannot delete other user's posts")
-            else:
-                self.write("This post no longer exists")
-        else:
-            self.write("error")
-
-
-class DeleteComment(Handler):
-    def post(self):
-        user = self.user
-        comments_id = self.request.get("com_id")
-        comment = Comment.get_by_id(int(comments_id))
-        if comment:
-            if comment.author == user.name:
-                comment.delete()
-                self.redirect('/post/%s' %  str(comment.comment_id))
-            else:
-                 self.write("You cannot delete other user's comments")
-        else:
-             self.write("This comment no longer exists")
-
-
-class AddComment(Handler):
-    def post(self):
-        if not self.user:
-            self.redirect('/login')
-
-        post_id = self.request.get("post_id")
-        content = self.request.get('content')
-        user = self.user
-        if content:
-            c = Comment(content = content, author = user.name, comment_id = post_id)
-            c.put()
-            self.redirect('/post/%s' %  post_id)
-        else:
-            error = "Content, please!"
-
-class EditComment(AddComment):
-    def get(self):
-        self.render("editcomment.html")
-
-    def post(self):
-        if not self.user:
-            self.redirect('/login')
-
-        post_id = self.request.get("post_id")
-        content = self.request.get('content')
-        user = self.user
-        if content:
-            c = Comment(content = content, author = user.name, comment_id = post_id)
-            c.put()
-            self.redirect('/post/%s' %  post_id)
-        else:
-            error = "Content, please!"
+"""
 
 class SignupPage(Handler):
     def get(self):
@@ -295,13 +141,12 @@ class SignupPage(Handler):
     def done(self, *a, **kw):
         raise NotImplementedError
 
-
 class Register(SignupPage):
     def done(self):
         #Makes sure user doesnt already exist, then creates and logs in new user
         u = User.by_name(self.username)
         if u:
-            msg = 'That user already exists.'
+            msg = 'Error: That user already exists.'
             self.render('sign-up.html', error_username = msg)
         else:
             u = User.register(self.username, self.password, self.email)
@@ -310,9 +155,216 @@ class Register(SignupPage):
             self.login(u)
             self.redirect('/')
 
+class LoginPage(Handler):
+    def get(self):
+        self.render("login.html")
+    #Gets username and password
+    def post(self):
+        username = self.request.get('username')
+        password = self.request.get('password')
+        #If valid username and password logs in user, otherwise prints error message
+        u = User.login(username, password)
+        if u:
+            self.login(u)
+            self.redirect('/')
+        else:
+            msg = 'Error: Invalid login'
+            self.render('login.html', error = msg)
+
+#Calls logout method in the Handler and redirects to homepage
+class LogoutPage(Handler):
+    def get(self):
+        self.logout()
+        self.redirect('/')
 
 """
+
+    Handles Requests for Posts
+
+"""
+
+class NewPostPage(Handler):
+    def get(self):
+        if self.user:
+            self.render("newpost.html")
+        else:
+            self.redirect("/login")
+
+    def post(self):
+        if not self.user:
+            self.redirect('/login')
+
+        user = self.user
+        subject = self.request.get('subject')
+        content = self.request.get('content')
+        #If there is subject and content, the Post class creates a new post and redirects to a permalink
+        if subject and content:
+            p = Post(parent = blog_key(), subject = subject, content = content, author = str(user.name))
+            p.put()
+            self.redirect('/post/%s' % str(p.key().id()))
+        else:
+            error = "Error: Subject and Content, please!"
+            self.render("newpost.html", subject=subject, content=content, error=error)
+
+
+class EditPost(Handler):
+    def get(self, post_id):
+        #Gets post id
+        post = Post.get_by_id(int(post_id), parent=blog_key())
+        if post:
+            self.render("editpost.html", post=post)
+        else:
+            self.write("Error: Post doesn't exist")
+
+    def post(self, post_id):
+        if not self.user:
+            self.redirect('/login')
+
+        post = Post.get_by_id(int(post_id), parent=blog_key())
+        subject = self.request.get("subject")
+        content = self.request.get('content')
+        user = self.user
+        #If the user is the author. Theres is subject and content, the post is updated. Otherwise error.
+        if user.name == post.author:
+            if content and subject:
+                post = Post.get_by_id(int(post_id), parent=blog_key())
+                if post:
+                    post.subject = subject
+                    post.content = content
+                    post.put()
+                    time.sleep(0.2)
+                    self.redirect('/post/%s' %  str(post_id))
+                else:
+                    self.write("Error: Post doesnt Exist")
+            else:
+                error = "Content and subject, please!"
+        else:
+            self.write("Error: Can not edit other user's post")
+
+
+class PostPage(Handler):
+    def get(self, post_id):
+        #Creates key for specific post
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        #Gets the key for a specific post
+        post = db.get(key)
+        #Gets all the comments and filters by matching the post id
+        comments = Comment.all().order("-created")
+        comments.filter("post_id =", str(post_id))
+
+        if not post:
+            self.error(404)
+            return
+
+        self.render("permalink.html", post = post, comments = comments)
+    #Adds a like when "like" input value is submitted
+    def post(self):
+        user = self.user
+        if self.request.get("like"):
+            L = Like(like_postid = post_id, like_author = user.name, like_num = like_num + 1)
+            L.put()
+
+class DeletePost(Handler):
+    def get(self, post_id):
+        #Creates key for a specific post
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        #Gets the key for a specific post
+        post = db.get(key)
+        if post:
+            self.render("deletepost.html", post=post)
+        else:
+            self.write("Error: Post doesn't Exist")
+
+    def post(self, post_id):
+        user = self.user
+        #Creates Key for a specific post
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        #Gets the key for a specific post
+        post = db.get(key)
+
+        #Checks if the author is the user and then deletes the post
+        if post:
+            print post.subject
+            if post.author == user.name:
+                post.delete()
+                self.redirect('/blog')
+            else:
+                self.write("Error: Can't Delete other User's Post")
+        else:
+            self.write("Error: Post doesen't Exist")
+
+"""
+
+    Handles Requests for Comments
+
+"""
+
+class DeleteComment(Handler):
+    def post(self, comment_id):
+        user = self.user
+        #Gets comment entity by its datastore id
+        comment = Comment.get_by_id(int(comment_id))
+        #Checks if the author is the user, then deletes the comment
+        if comment:
+            if comment.author == user.name:
+                comment.delete()
+                self.redirect('/post/%s' %  str(comment.post_id))
+            else:
+                 self.write("Error: You cannot delete other user's comments")
+        else:
+             self.write("Error: This comment no longer exists")
+
+class AddComment(Handler):
+    def post(self):
+        if not self.user:
+            self.redirect('/login')
+
+        post_id = self.request.get("post_id")
+        content = self.request.get('content')
+        user = self.user
+        #Get input from user and creates a new comment
+        if content:
+            c = Comment(content = content, author = user.name, post_id = post_id)
+            c.put()
+            time.sleep(0.2)
+            self.redirect('/post/%s' % str(post_id))
+        else:
+            error = "Content, please!"
+
+class EditComment(Handler):
+    def get(self, comment_id):
+        comment = Comment.get_by_id(int(comment_id))
+        if comment:
+            time.sleep(0.2)
+            self.render("editcomment.html", comment=comment)
+        else:
+            self.write('Error: Comment doesnt Exist')
+
+    def post(self, comment_id):
+        if not self.user:
+            self.redirect('/login')
+
+        content = self.request.get('content')
+        user = self.user
+        #Gets a comment, then updates the content
+        if content:
+            comment = Comment.get_by_id(int(comment_id))
+            if comment:
+                comment.content = content
+                comment.put()
+                time.sleep(0.2)
+                self.redirect('/post/%s' %  str(comment.post_id))
+            else:
+                self.write("failed")
+        else:
+            error = "Content, please!"
+
+
+
+"""
+
         Methods to Make Password Hashes
+
 """
 
 #Generates 5 random letters for use in make_pw_hash method
@@ -339,13 +391,11 @@ def users_key(name = "default"):
 def blog_key(group="default"):
     return db.Key.from_path('blogs', group)
 
-def post_key(name="default"):
-    return db.Key.from_path("posts", name)
-
-
 
 """
-        The User, Post and Comment Models
+
+        The User, Post, Comment and Like Models
+
 """
 
 #User entity with name, password hash and optional email properties
@@ -386,7 +436,7 @@ class Post(db.Model):
     subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
-    author = db.StringProperty(required = True)
+    author = db.StringProperty()
 
     #Returns a post by its id
     @classmethod
@@ -397,10 +447,11 @@ class Post(db.Model):
 #Comment entity with content and author properties
 class Comment(db.Model):
     content = db.StringProperty(required = True)
-    author = db.StringProperty(required = True)
-    comment_id = db.StringProperty(required = True)
+    author = db.StringProperty()
+    post_id = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
 
+    #Helper Method to add comments
     @classmethod
     def addComment(cls, content, author):
         c = Comment(content = str(content),
@@ -409,14 +460,17 @@ class Comment(db.Model):
         c.put()
         return c.key().id()
 
+#Like Entity with author, id number and number of likes
 class Like(db.Model):
-    like_author = db.StringProperty(required = True)
+    like_author = db.StringProperty()
     like_postid = db.TextProperty(required = True)
     like_num = db.IntegerProperty(default = 0)
 
 
 """
+
         Username and Password Validation
+
 """
 
 #Basic valid username and password code, copied from Udacity Intro to Backend course
@@ -435,17 +489,19 @@ def valid_email(email):
 
 
 """
+
         Handles URI Routing
+
 """
 
 app = webapp2.WSGIApplication([('/', HomePage),
                                ("/blog", BlogPage),
                                ("/resources", ResourcePage),
                                ("/about", AboutPage),
-                               ("/deletepost", DeletePost),
-                               ("/deletecomment", DeleteComment),
-                               ("/editpost", EditPost),
-                               ("/editcomment", EditComment),
+                               ("/deletepost/([0-9]+)", DeletePost),
+                               ("/deletecomment/([0-9]+)", DeleteComment),
+                               ("/editpost/([0-9]+)", EditPost),
+                               ("/editcomment/([0-9]+)", EditComment),
                                ('/post/([0-9]+)', PostPage),
                                ('/newpost', NewPostPage),
                                ('/newcomment', AddComment),

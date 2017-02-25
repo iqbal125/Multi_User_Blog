@@ -8,8 +8,16 @@
     <br>
     <p>{{post.content | safe}}</p>
     <br>
+    <form method="post" action="/like">
+    <input type="hidden" value="{{post.key().id()}}" name="post_id" />
     <input style="padding:6px 15px;font-size:10px;color:white;border-radius:6px;border:1px solid;background-color:blue;"
       type="submit" value="Like" name="like">
+    </form>
+    {% for i in like_nums %}
+      <p>
+      Likes: {{i.like_num}}
+      </p>
+    {% endfor %}
     <br>
     <br>
     <p><strong>Comments:</strong></p>

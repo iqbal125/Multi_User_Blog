@@ -9,3 +9,9 @@ indexes:
   properties:
   - name: name
   - name: email
+
+- kind: Comment
+  properties:
+  - name: post_id
+  - name: created
+    direction: desc

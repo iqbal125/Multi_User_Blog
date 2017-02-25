@@ -1,16 +1,5 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Login</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-  </head>
-  <body>
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-lg-1"></div>
-        <div class="col-lg-2">
-          <br>
+{% extends "base.html" %}
+{% block content %}
           <h2>Login</h2>
           <form method="post">
             <table>
@@ -41,14 +30,5 @@
           <div style="margin-top:15px;">
             <a href="/signup">Not a Memeber? Sign-up</a>
           </div>
-        </div>
-        <div class="col-lg-1"></div>
-        <div class="col-lg-8">
-          <div>
-            <a href="/"><img class="img-responsive" src="https://noma.org/wp-content/uploads/2015/07/zen-4-1024x293.jpg" style="margin-top:10px;"></a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </body>
-</html>
+            <!-- <a href="/"><img class="img-responsive" src="https://noma.org/wp-content/uploads/2015/07/zen-4-1024x293.jpg" style="margin-top:10px;"></a> -->
+{% endblock %}

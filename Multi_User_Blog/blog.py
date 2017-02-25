@@ -192,7 +192,7 @@ class NewPostPage(Handler):
 
     def post(self):
         if not self.user:
-            self.redirect('/login')
+            return self.redirect('/login')
 
         user = self.user
         subject = self.request.get('subject')
@@ -218,9 +218,11 @@ class EditPost(Handler):
 
     def post(self, post_id):
         if not self.user:
-            self.redirect('/login')
+            return self.redirect('/login')
 
         post = Post.get_by_id(int(post_id), parent=blog_key())
+        if not post:
+            return self.error(404)
         subject = self.request.get("subject")
         content = self.request.get('content')
         user = self.user
@@ -253,19 +255,32 @@ class PostPage(Handler):
         comments.filter("post_id =", str(post_id))
 
         if not post:
-            self.error(404)
-            return
+            return self.error(404)
 
         self.render("permalink.html", post = post, comments = comments)
+
+class LikePost(Handler):
     #Adds a like when "like" input value is submitted
     def post(self):
+        post_id = self.request.get('post_id')
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+        if not post:
+            return self.redirect('/login')
+
+        like_nums = Like.all()
+        like_nums.filter("like_postid =", str(post_id))
+        like_num = 0
         user = self.user
         if self.request.get("like"):
             L = Like(like_postid = post_id, like_author = user.name, like_num = like_num + 1)
             L.put()
+            self.redirect('/post/%s' % str(post_id))
 
 class DeletePost(Handler):
     def get(self, post_id):
+        if not self.user:
+            return self.redirect('/login')
         #Creates key for a specific post
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         #Gets the key for a specific post
@@ -276,12 +291,16 @@ class DeletePost(Handler):
             self.write("Error: Post doesn't Exist")
 
     def post(self, post_id):
+        if not self.user:
+            return self.redirect('/login')
+
         user = self.user
         #Creates Key for a specific post
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         #Gets the key for a specific post
         post = db.get(key)
-
+        if not post:
+            return self.error(404)
         #Checks if the author is the user and then deletes the post
         if post:
             print post.subject
@@ -301,9 +320,13 @@ class DeletePost(Handler):
 
 class DeleteComment(Handler):
     def post(self, comment_id):
+        if not self.user:
+            return self.redirect('/login')
         user = self.user
         #Gets comment entity by its datastore id
         comment = Comment.get_by_id(int(comment_id))
+        if not comment:
+            return self.error(404)
         #Checks if the author is the user, then deletes the comment
         if comment:
             if comment.author == user.name:
@@ -317,9 +340,11 @@ class DeleteComment(Handler):
 class AddComment(Handler):
     def post(self):
         if not self.user:
-            self.redirect('/login')
+            return self.redirect('/login')
 
         post_id = self.request.get("post_id")
+        if not post_id:
+            return self.error(404)
         content = self.request.get('content')
         user = self.user
         #Get input from user and creates a new comment
@@ -333,6 +358,8 @@ class AddComment(Handler):
 
 class EditComment(Handler):
     def get(self, comment_id):
+        if not self.user:
+            return self.redirect('/login')
         comment = Comment.get_by_id(int(comment_id))
         if comment:
             time.sleep(0.2)
@@ -342,7 +369,7 @@ class EditComment(Handler):
 
     def post(self, comment_id):
         if not self.user:
-            self.redirect('/login')
+            return self.redirect('/login')
 
         content = self.request.get('content')
         user = self.user
@@ -436,7 +463,7 @@ class Post(db.Model):
     subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
-    author = db.StringProperty()
+    author = db.StringProperty(required = True)
 
     #Returns a post by its id
     @classmethod
@@ -447,7 +474,7 @@ class Post(db.Model):
 #Comment entity with content and author properties
 class Comment(db.Model):
     content = db.StringProperty(required = True)
-    author = db.StringProperty()
+    author = db.StringProperty(required = True)
     post_id = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
 
@@ -498,6 +525,7 @@ app = webapp2.WSGIApplication([('/', HomePage),
                                ("/blog", BlogPage),
                                ("/resources", ResourcePage),
                                ("/about", AboutPage),
+                               ("/like", LikePost),
                                ("/deletepost/([0-9]+)", DeletePost),
                                ("/deletecomment/([0-9]+)", DeleteComment),
                                ("/editpost/([0-9]+)", EditPost),

@@ -268,14 +268,25 @@ class LikePost(Handler):
         if not post:
             return self.redirect('/login')
 
-        like_nums = Like.all()
-        like_nums.filter("like_postid =", str(post_id))
+        likes_all = Like.all()
+        likes = likes_all.filter("like_postid =", str(post_id))
         like_num = 0
         user = self.user
+        like_names = []
+
+        for i in likes:
+            like_names.append(i.like_author)
+
         if self.request.get("like"):
-            L = Like(like_postid = post_id, like_author = user.name, like_num = like_num + 1)
-            L.put()
-            self.redirect('/post/%s' % str(post_id))
+            if user.name != post.author:
+                if user.name not in like_names:
+                    L = Like(like_postid = post_id, like_author = user.name, like_num = like_num + 1)
+                    L.put()
+                    self.redirect('/post/%s' % str(post_id))
+                else:
+                    self.write("Already Liked post")
+            else:
+                self.write("Error: Can't Like your own post")
 
 class DeletePost(Handler):
     def get(self, post_id):
@@ -343,12 +354,13 @@ class AddComment(Handler):
             return self.redirect('/login')
 
         post_id = self.request.get("post_id")
-        if not post_id:
-            return self.error(404)
         content = self.request.get('content')
         user = self.user
-        #Get input from user and creates a new comment
+
+        if not post_id:
+            return self.error(404)
         if content:
+        #Get input from user and creates a new comment
             c = Comment(content = content, author = user.name, post_id = post_id)
             c.put()
             time.sleep(0.2)
@@ -361,7 +373,7 @@ class EditComment(Handler):
         if not self.user:
             return self.redirect('/login')
         comment = Comment.get_by_id(int(comment_id))
-        if comment:
+        if comment.author == self.user.name:
             time.sleep(0.2)
             self.render("editcomment.html", comment=comment)
         else:
@@ -376,7 +388,7 @@ class EditComment(Handler):
         #Gets a comment, then updates the content
         if content:
             comment = Comment.get_by_id(int(comment_id))
-            if comment:
+            if comment.author == self.user.name:
                 comment.content = content
                 comment.put()
                 time.sleep(0.2)
